@@ -117,7 +117,7 @@ public class PurchasesController extends ModelController<Purchase> {
             map.put(Application.class, Arrays.asList("ID","APP_ID","CHANGE_SECRET", "TEST_BALANCE", "PRODUCTION_BALANCE"));
         }
         if (!map.containsKey(Plan.class)){
-            map.put(Plan.class, Arrays.asList("ID","NAME","MAXIMUM_RETAIL_PRICE", "NUMBER_OF_ORDER_CREDITS","TAX_PERCENTAGE"));
+            map.put(Plan.class, Arrays.asList("ID","NAME","MAXIMUM_RETAIL_PRICE", "NUMBER_OF_CREDITS","TAX_PERCENTAGE"));
         }
         return map;
     }
