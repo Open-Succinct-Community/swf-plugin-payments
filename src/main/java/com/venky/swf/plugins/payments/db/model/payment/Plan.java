@@ -3,10 +3,12 @@ package com.venky.swf.plugins.payments.db.model.payment;
 import com.venky.swf.db.annotations.column.COLUMN_DEF;
 import com.venky.swf.db.annotations.column.IS_VIRTUAL;
 import com.venky.swf.db.annotations.column.defaulting.StandardDefault;
+import com.venky.swf.db.annotations.model.MENU;
 import com.venky.swf.db.model.Model;
 import com.venky.swf.plugins.collab.db.model.participants.admin.Company;
 
 
+@MENU("Platform Revenue")
 public interface Plan extends Model {
     public String getName();
     public void setName(String name);
