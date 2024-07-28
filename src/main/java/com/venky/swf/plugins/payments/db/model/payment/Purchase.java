@@ -8,6 +8,7 @@ import com.venky.swf.db.annotations.column.defaulting.StandardDefault;
 import com.venky.swf.db.annotations.column.validations.Enumeration;
 import com.venky.swf.db.annotations.model.MENU;
 import com.venky.swf.db.model.Model;
+import com.venky.swf.db.model.User;
 import com.venky.swf.plugins.collab.db.model.CompanyNonSpecific;
 
 import java.sql.Timestamp;
@@ -36,6 +37,10 @@ public interface Purchase extends Model, CompanyNonSpecific {
     @UNIQUE_KEY
     public String getPaymentReference();
     public void setPaymentReference(String paymentReference);
+
+    public Long getPaymentMadeById();
+    public void setPaymentMadeById(Long id);
+    public User getPaymentMadeBy();
 
     @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
     public boolean isCaptured();
