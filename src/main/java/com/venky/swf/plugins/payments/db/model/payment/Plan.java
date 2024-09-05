@@ -9,6 +9,8 @@ import com.venky.swf.db.annotations.model.MENU;
 import com.venky.swf.db.model.Model;
 import com.venky.swf.plugins.collab.db.model.participants.admin.Company;
 
+import java.util.List;
+
 
 @MENU("Platform Revenue")
 public interface Plan extends Model {
@@ -55,5 +57,7 @@ public interface Plan extends Model {
     @IS_VIRTUAL
     Double getTax();
 
+
+    List<Purchase> getPurchases();
 
 }
