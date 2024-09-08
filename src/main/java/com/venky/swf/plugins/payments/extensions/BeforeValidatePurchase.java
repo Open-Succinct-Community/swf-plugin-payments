@@ -1,14 +1,17 @@
 package com.venky.swf.plugins.payments.extensions;
 
+import com.venky.core.date.DateUtils;
 import com.venky.core.util.Bucket;
 import com.venky.swf.db.Database;
+import com.venky.swf.db.JdbcTypeHelper.TypeConverter;
 import com.venky.swf.db.extensions.BeforeModelValidateExtension;
-import com.venky.swf.plugins.background.core.TaskManager;
+import com.venky.swf.plugins.payments.db.model.payment.Plan;
 import com.venky.swf.plugins.payments.db.model.payment.Purchase;
 import com.venky.swf.plugins.payments.db.model.payment.Purchase.PaymentStatus;
-import com.venky.swf.plugins.payments.tasks.PaymentCapture;
 
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.Calendar;
 
 public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchase> {
     static {
@@ -31,14 +34,6 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
             authorizedPaymentUpdate = false;
         }
 
-        if (model.getRawRecord().isFieldDirty("CAPTURED") && model.isCaptured()){
-            if (authorizedPaymentUpdate){
-                model.setStatus(PaymentStatus.captured.name());
-                model.getRemainingCredits().increment(model.getPlan().getNumberOfCredits());
-            }else{
-                throw new RuntimeException("Cannot capture manually like this!");
-            }
-        }
         if (model.getRawRecord().isFieldDirty("PAYMENT_REFERENCE") && !model.getReflector().isVoid(model.getPaymentReference())){
             model.setPurchasedOn(new Timestamp(System.currentTimeMillis()));
         }
@@ -47,6 +42,30 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
             model.setStatus(PaymentStatus.created.name());
         }
 
+        if (model.getRawRecord().isFieldDirty("CAPTURED") && model.isCaptured()){
+            if (authorizedPaymentUpdate){
+                Plan plan = model.getPlan();
+                model.setStatus(PaymentStatus.captured.name());
+                model.getRemainingCredits().increment(plan.getNumberOfCredits());
+
+                TypeConverter<Integer> converter = plan.getReflector().getJdbcTypeHelper().getTypeRef(Integer.class).getTypeConverter();
+                if (model.getEffectiveFrom() == null && model.getPurchasedOn() != null){
+                    model.setEffectiveFrom(new Date(model.getPurchasedOn().getTime()));
+                }
+                if (model.getEffectiveFrom() != null) {
+                    long tmp = DateUtils.addToMillis(model.getEffectiveFrom().getTime(), Calendar.DAY_OF_YEAR, converter.valueOf(plan.getNumberOfDaysValidity()));
+                    tmp = DateUtils.addToMillis(tmp, Calendar.MONTH, converter.valueOf(plan.getNumberOfMonthsValidity()));
+                    tmp = DateUtils.addToMillis(tmp, Calendar.YEAR, converter.valueOf(plan.getNumberOfYearsValidity()));
+                    if (tmp > model.getEffectiveFrom().getTime()) {
+                        model.setExpiresOn(new Date(DateUtils.getStartOfDay(tmp)));
+                    }
+                }
+            }else{
+                throw new RuntimeException("Cannot capture manually like this!");
+            }
+        }
+
     }
+
 
 }

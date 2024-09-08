@@ -1,8 +1,11 @@
 package com.venky.swf.plugins.payments.db.model.payment;
 
+import com.venky.core.date.DateUtils;
 import com.venky.core.util.Bucket;
+import com.venky.swf.db.JdbcTypeHelper.TypeConverter;
 import com.venky.swf.db.annotations.column.COLUMN_DEF;
 import com.venky.swf.db.annotations.column.IS_NULLABLE;
+import com.venky.swf.db.annotations.column.IS_VIRTUAL;
 import com.venky.swf.db.annotations.column.UNIQUE_KEY;
 import com.venky.swf.db.annotations.column.defaulting.StandardDefault;
 import com.venky.swf.db.annotations.column.validations.Enumeration;
@@ -11,7 +14,9 @@ import com.venky.swf.db.model.Model;
 import com.venky.swf.db.model.User;
 import com.venky.swf.plugins.collab.db.model.CompanyNonSpecific;
 
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.Calendar;
 
 @MENU("Platform Revenue")
 public interface Purchase extends Model, CompanyNonSpecific {
@@ -54,6 +59,14 @@ public interface Purchase extends Model, CompanyNonSpecific {
         captured,
         refunded,
     }
+
+    Date getEffectiveFrom();
+    void setEffectiveFrom(Date effectiveFrom);
+
+
+    Date getExpiresOn();
+    void setExpiresOn(Date expiresOn);
+
 
 
 }
