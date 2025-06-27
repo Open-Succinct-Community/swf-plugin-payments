@@ -24,6 +24,7 @@ public class PaymentStatusEventDispatcher implements Task {
                 setAmountPaid(link.getAmountPaid());
             }});
             link.setStatusCommunicated(true);
+            link.save();
         }
     }
 }
