@@ -12,6 +12,9 @@ public class PaymentLinkStatusUpdate implements Task {
     String payload;
     Map<String,String> headers ;
     long paymentGatewayId ;
+    public PaymentLinkStatusUpdate(){
+    
+    }
     public PaymentLinkStatusUpdate(String payload, Map<String,String> headers, PaymentGateway paymentGateway){
         this.payload = payload;
         this.headers = headers;
