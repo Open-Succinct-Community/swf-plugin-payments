@@ -16,7 +16,7 @@ public class PaymentLinkExtension extends ModelOperationExtension<PaymentLink> {
         if (instance.getRawRecord().isFieldDirty("STATUS") ||instance.getRawRecord().isFieldDirty("ACTIVE")){
             instance.setStatusCommunicated(false);
             if (!instance.getRawRecord().isNewRecord()) {
-                TaskManager.instance().executeAsync(new PaymentStatusEventDispatcher(instance.getId()), false);
+                TaskManager.instance().executeAsync(new PaymentStatusEventDispatcher(instance.getId()));
             }
         }
     }
