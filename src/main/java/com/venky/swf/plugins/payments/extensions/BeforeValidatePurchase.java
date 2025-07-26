@@ -2,6 +2,7 @@ package com.venky.swf.plugins.payments.extensions;
 
 import com.venky.core.date.DateUtils;
 import com.venky.core.util.Bucket;
+import com.venky.core.util.ObjectUtil;
 import com.venky.swf.db.Database;
 import com.venky.swf.db.JdbcTypeHelper.TypeConverter;
 import com.venky.swf.db.extensions.BeforeModelValidateExtension;
@@ -31,38 +32,64 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
         }
         Boolean authorizedPaymentUpdate = Database.getInstance().getCurrentTransaction().getAttribute("X-AuthorizedPaymentUpdate");
         if (authorizedPaymentUpdate == null){
-            authorizedPaymentUpdate = false;
+            Plan plan = model.getPlan();
+            authorizedPaymentUpdate = plan.getReflector().isVoid(plan.getSellingPrice());
+            if (authorizedPaymentUpdate && model.getRawRecord().isNewRecord()){
+                model.setCaptured(true);
+                if (plan.isTrailPlan()){
+                    model.setSingleUsePlan(true);
+                }else {
+                    model.setSingleUsePlan(null);//this is important to leave it null. and is nullable as it is part of unique key that allows multiple nulls.
+                    //Techniq to avoid counting number of uses.
+                }
+            }
         }
-
-        if (model.getRawRecord().isFieldDirty("PAYMENT_REFERENCE") && !model.getReflector().isVoid(model.getPaymentReference())){
-            model.setPurchasedOn(new Timestamp(System.currentTimeMillis()));
-        }
-
+        
+        
         if (model.getStatus() == null){
             model.setStatus(PaymentStatus.created.name());
         }
+        
+
 
         if (model.getRawRecord().isFieldDirty("CAPTURED") && model.isCaptured()){
-            if (authorizedPaymentUpdate){
-                Plan plan = model.getPlan();
-                model.setStatus(PaymentStatus.captured.name());
-                model.getRemainingCredits().increment(plan.getNumberOfCredits());
-
-                TypeConverter<Integer> converter = plan.getReflector().getJdbcTypeHelper().getTypeRef(Integer.class).getTypeConverter();
-                if (model.getEffectiveFrom() == null && model.getPurchasedOn() != null){
-                    model.setEffectiveFrom(new Date(model.getPurchasedOn().getTime()));
-                }
-                if (model.getEffectiveFrom() != null) {
-                    long tmp = DateUtils.addToMillis(model.getEffectiveFrom().getTime(), Calendar.DAY_OF_YEAR, converter.valueOf(plan.getNumberOfDaysValidity()));
-                    tmp = DateUtils.addToMillis(tmp, Calendar.MONTH, converter.valueOf(plan.getNumberOfMonthsValidity()));
-                    tmp = DateUtils.addToMillis(tmp, Calendar.YEAR, converter.valueOf(plan.getNumberOfYearsValidity()));
-                    if (tmp > model.getEffectiveFrom().getTime()) {
-                        model.setExpiresOn(new Date(DateUtils.getStartOfDay(tmp)));
-                    }
-                }
-            }else{
+            if (!authorizedPaymentUpdate){
                 throw new RuntimeException("Cannot capture manually like this!");
             }
+            long today =  DateUtils.getStartOfDay(model.getPurchasedOn().getTime());
+            model.setPurchasedOn(new Timestamp(System.currentTimeMillis()));
+            model.setEffectiveFrom(new Date(today));
+            
+            Plan plan = model.getPlan();
+            TypeConverter<Integer> converter = plan.getReflector().getJdbcTypeHelper().getTypeRef(Integer.class).getTypeConverter();
+            long tmp = DateUtils.addToMillis(model.getEffectiveFrom().getTime(), Calendar.DAY_OF_YEAR, converter.valueOf(plan.getNumberOfDaysValidity()));
+            tmp = DateUtils.addToMillis(tmp, Calendar.MONTH, converter.valueOf(plan.getNumberOfMonthsValidity()));
+            tmp = DateUtils.addToMillis(tmp, Calendar.YEAR, converter.valueOf(plan.getNumberOfYearsValidity()));
+            if (tmp > model.getEffectiveFrom().getTime()) {
+                model.setExpiresOn(new Date(DateUtils.getStartOfDay(tmp)));
+            }else {
+                model.setExpiresOn(new Date(DateUtils.HIGH_DATE.getTime()));
+            }
+            model.getRemainingCredits().increment(plan.getNumberOfCredits());
+            model.setAuditRemarks("Top Up");
+            
+            Purchase currentSubscription = model.getBuyer().getLatestSubscription(model.isProduction());
+            if (currentSubscription != null) {
+                model.getRemainingCredits().increment(currentSubscription.getRemainingCredits().doubleValue());
+                currentSubscription.getRemainingCredits().decrement(currentSubscription.getRemainingCredits().doubleValue()); //Zero out old sunscription
+
+                if (!model.isExpired()){
+                    model.setExpiresOn(new Date(model.getExpiresOn().getTime()+ (currentSubscription.getExpiresOn().getTime()-today)));
+                    currentSubscription.setExpiresOn(new Date(today));
+                }
+                currentSubscription.save();
+                
+                // Adjust previous overrun.
+                model.setAuditRemarks("Top Up with adjustment from last subscription");
+                currentSubscription.setAuditRemarks("Close out and carry over Balance to next subscription");
+            }
+            
+            model.setStatus(PaymentStatus.captured.name());
         }
 
     }

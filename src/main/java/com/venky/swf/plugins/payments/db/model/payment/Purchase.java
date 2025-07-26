@@ -1,31 +1,49 @@
 package com.venky.swf.plugins.payments.db.model.payment;
 
-import com.venky.core.date.DateUtils;
 import com.venky.core.util.Bucket;
-import com.venky.swf.db.JdbcTypeHelper.TypeConverter;
 import com.venky.swf.db.annotations.column.COLUMN_DEF;
 import com.venky.swf.db.annotations.column.IS_NULLABLE;
 import com.venky.swf.db.annotations.column.IS_VIRTUAL;
 import com.venky.swf.db.annotations.column.UNIQUE_KEY;
 import com.venky.swf.db.annotations.column.defaulting.StandardDefault;
+import com.venky.swf.db.annotations.column.pm.PARTICIPANT;
 import com.venky.swf.db.annotations.column.validations.Enumeration;
 import com.venky.swf.db.annotations.model.MENU;
 import com.venky.swf.db.model.Model;
 import com.venky.swf.db.model.User;
+import com.venky.swf.plugins.audit.db.model.AUDITED;
 import com.venky.swf.plugins.collab.db.model.CompanyNonSpecific;
 
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.Calendar;
 
 @MENU("Platform Revenue")
+@AUDITED
 public interface Purchase extends Model, CompanyNonSpecific {
+    
+    @PARTICIPANT
+    @IS_NULLABLE
+    public Long getApplicationId();
+    public void setApplicationId(Long id);
+    public Application getApplication();
+    
+    @PARTICIPANT
+    @IS_NULLABLE
+    Long getCompanyId();
+    void setCompanyId(Long id);
+    Company getCompany();
+    
     @IS_NULLABLE(false)
     @UNIQUE_KEY
     public Long getPlanId();
     public void setPlanId(Long id);
     public Plan getPlan();
-
+    
+    @UNIQUE_KEY
+    @IS_NULLABLE
+    Boolean isSingleUsePlan();
+    void setSingleUsePlan(Boolean singleUsePlan);
+    
 
     @Enumeration(enumClass = "com.venky.swf.plugins.payments.db.model.payment.Purchase$PaymentStatus")
     @IS_NULLABLE
@@ -66,7 +84,23 @@ public interface Purchase extends Model, CompanyNonSpecific {
 
     Date getExpiresOn();
     void setExpiresOn(Date expiresOn);
-
-
-
+    
+    
+    
+    @IS_VIRTUAL
+    Long getBuyerId();
+    Buyer getBuyer();
+    
+    @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
+    @IS_NULLABLE(false)
+    boolean isProduction();
+    void setProduction(boolean production);
+    
+    
+    String getAuditRemarks();
+    void setAuditRemarks(String lastUpdateRemarks);
+    
+    @IS_VIRTUAL
+    boolean isExpired();
+    
 }

@@ -7,7 +7,11 @@ import com.venky.swf.db.annotations.column.UNIQUE_KEY;
 import com.venky.swf.db.annotations.column.defaulting.StandardDefault;
 import com.venky.swf.db.annotations.model.MENU;
 import com.venky.swf.db.model.Model;
-import com.venky.swf.plugins.collab.db.model.participants.admin.Company;
+import com.venky.swf.routing.Config;
+import com.venky.swf.sql.Conjunction;
+import com.venky.swf.sql.Expression;
+import com.venky.swf.sql.Operator;
+import com.venky.swf.sql.Select;
 
 import java.util.List;
 
@@ -17,6 +21,17 @@ public interface Plan extends Model {
     @UNIQUE_KEY
     public String getName();
     public void setName(String name);
+    
+    @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
+    @IS_NULLABLE(false)
+    boolean isTrailPlan();
+    void setTrailPlan(boolean trailPlan);
+    
+    @COLUMN_DEF(StandardDefault.BOOLEAN_TRUE)
+    @IS_NULLABLE(false)
+    boolean isAvailable();
+    void setAvailable(boolean available);
+    
 
     @COLUMN_DEF(value = StandardDefault.SOME_VALUE,args = "0")
     public int getNumberOfCredits();
@@ -57,7 +72,24 @@ public interface Plan extends Model {
     @IS_VIRTUAL
     Double getTax();
 
-
+    
     List<Purchase> getPurchases();
-
+    
+    public Purchase purchase(Buyer forBuyer);
+    
+    public static Plan trialPlan(){
+        Select select  = new Select().from(Plan.class);
+        select.where(new Expression(select.getPool(), Conjunction.AND).
+                add(new Expression(select.getPool(),"ACTIVE", Operator.EQ,true)).
+                add(new Expression(select.getPool(),"TRIAL",Operator.EQ,true)));
+        List<Plan> plans = select.execute();
+        if (plans.size() != 1){
+            if (plans.size() > 1){
+                Config.instance().getLogger(Plan.class.getName()).warning("Cannot issue any Trail Plan as multiple plans found!!");
+            }
+            return null;
+        }else {
+            return plans.get(0);
+        }
+    }
 }
