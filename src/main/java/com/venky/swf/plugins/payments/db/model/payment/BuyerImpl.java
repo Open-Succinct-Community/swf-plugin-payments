@@ -10,6 +10,7 @@ import com.venky.swf.sql.Expression;
 import com.venky.swf.sql.Operator;
 import com.venky.swf.sql.Select;
 
+import java.lang.module.ModuleReader;
 import java.lang.reflect.Method;
 import java.sql.Date;
 import java.util.HashMap;
@@ -74,22 +75,26 @@ public class BuyerImpl<B extends Buyer & Model> extends ModelImpl<B> {
         List<String> referenceFields = ModelReflector.instance(Purchase.class).getReferenceFields(buyer.getReflector().getModelClass());
         if (referenceFields.size() == 1){
             expression.add(new Expression(select.getPool(),referenceFields.get(0) , Operator.EQ,buyer.getId()));
+        }else {
+            throw new RuntimeException("Cannot identify buyer!");
         }
 
         expression.add(new Expression(select.getPool(),"PRODUCTION", Operator.EQ,production));
         expression.add(new Expression(select.getPool(),"CAPTURED", Operator.EQ,true));
         expression.add(new Expression(select.getPool(),"PURCHASED_ON", Operator.NE));
         expression.add(new Expression(select.getPool(),"EFFECTIVE_FROM", Operator.LE , new Date(DateUtils.getStartOfDay(System.currentTimeMillis()))));
-        return select.where(expression).orderBy("EFFECTIVE_FROM DESC"  ).execute(1); //Latest.
+        return select.where(expression).orderBy("EFFECTIVE_FROM DESC" , "CREATED_AT DESC"  ).execute(1); //Latest.
     }
     public Purchase getIncompletePurchase(boolean production) {
         B buyer = getProxy();
         Select select = new Select().from(Purchase.class);
         Expression expression = new Expression(select.getPool(), Conjunction.AND);
-        List<Method> referredModelGetters = getReflector().getReferredModelGetters(buyer.getReflector().getModelClass());
-        if (referredModelGetters.size() == 1){
-            String referenceField = getReflector().getReferenceField(referredModelGetters.get(0));
+        List<String> referenceFields = ModelReflector.instance(Purchase.class).getReferenceFields(buyer.getReflector().getModelClass());
+        if (referenceFields.size() == 1){
+            String referenceField = referenceFields.get(0);
             expression.add(new Expression(select.getPool(),referenceField , Operator.EQ,buyer.getId()));
+        }else {
+            throw new RuntimeException("Cannot identify buyer!");
         }
         expression.add(new Expression(select.getPool(),"CAPTURED", Operator.EQ,false));
         expression.add(new Expression(select.getPool(),"PRODUCTION", Operator.EQ,production));

@@ -2,7 +2,6 @@ package com.venky.swf.plugins.payments.extensions;
 
 import com.venky.core.date.DateUtils;
 import com.venky.core.util.Bucket;
-import com.venky.core.util.ObjectUtil;
 import com.venky.swf.db.Database;
 import com.venky.swf.db.JdbcTypeHelper.TypeConverter;
 import com.venky.swf.db.extensions.BeforeModelValidateExtension;
@@ -21,9 +20,10 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
     @Override
     public void beforeValidate(Purchase model) {
         if (model.getRawRecord().isFieldDirty("REMAINING_CREDITS")) {
-            Double oldValue = (Double) model.getRawRecord().getOldValue("REMAINING_CREDITS");
+            Double oldValue = model.getReflector().getJdbcTypeHelper().getTypeRef(double.class).getTypeConverter().valueOf(model.getRawRecord().getOldValue("REMAINING_CREDITS"));
+            
             double currValue = model.getRemainingCredits().doubleValue();
-            if (model.getReflector().getJdbcTypeHelper().getTypeRef(double.class).getTypeConverter().valueOf(oldValue) < currValue) {
+            if (oldValue < currValue) {
                 throw new RuntimeException("Remaining Credits cannot be increased manually");
             }
         }
@@ -36,7 +36,7 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
             authorizedPaymentUpdate = plan.getReflector().isVoid(plan.getSellingPrice());
             if (authorizedPaymentUpdate && model.getRawRecord().isNewRecord()){
                 model.setCaptured(true);
-                if (plan.isTrailPlan()){
+                if (plan.isTrialPlan()){
                     model.setSingleUsePlan(true);
                 }else {
                     model.setSingleUsePlan(null);//this is important to leave it null. and is nullable as it is part of unique key that allows multiple nulls.
@@ -56,8 +56,9 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
             if (!authorizedPaymentUpdate){
                 throw new RuntimeException("Cannot capture manually like this!");
             }
-            long today =  DateUtils.getStartOfDay(model.getPurchasedOn().getTime());
             model.setPurchasedOn(new Timestamp(System.currentTimeMillis()));
+            
+            long today =  DateUtils.getStartOfDay(model.getPurchasedOn().getTime());
             model.setEffectiveFrom(new Date(today));
             
             Plan plan = model.getPlan();
@@ -78,15 +79,16 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
                 model.getRemainingCredits().increment(currentSubscription.getRemainingCredits().doubleValue());
                 currentSubscription.getRemainingCredits().decrement(currentSubscription.getRemainingCredits().doubleValue()); //Zero out old sunscription
 
-                if (!model.isExpired()){
+                if (!currentSubscription.isExpired()){
+                    //It is a pure date based plan.
                     model.setExpiresOn(new Date(model.getExpiresOn().getTime()+ (currentSubscription.getExpiresOn().getTime()-today)));
                     currentSubscription.setExpiresOn(new Date(today));
                 }
-                currentSubscription.save();
-                
+
                 // Adjust previous overrun.
                 model.setAuditRemarks("Top Up with adjustment from last subscription");
                 currentSubscription.setAuditRemarks("Close out and carry over Balance to next subscription");
+                currentSubscription.save(false);
             }
             
             model.setStatus(PaymentStatus.captured.name());

@@ -31,7 +31,7 @@ public class PurchaseImpl extends ModelImpl<Purchase> {
     public boolean isExpired(){
         Purchase purchase = getProxy();
         Plan plan = purchase.getPlan();
-        if (purchase.getExpiresOn().getTime() < System.currentTimeMillis()){
+        if (purchase.getExpiresOn() != null && purchase.getExpiresOn().getTime() < System.currentTimeMillis()){
             //Time based plan
             return true;
         }else if (plan.getNumberOfCredits() > 0) {

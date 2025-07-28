@@ -24,8 +24,8 @@ public interface Plan extends Model {
     
     @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
     @IS_NULLABLE(false)
-    boolean isTrailPlan();
-    void setTrailPlan(boolean trailPlan);
+    boolean isTrialPlan();
+    void setTrialPlan(boolean trailPlan);
     
     @COLUMN_DEF(StandardDefault.BOOLEAN_TRUE)
     @IS_NULLABLE(false)
@@ -80,8 +80,8 @@ public interface Plan extends Model {
     public static Plan trialPlan(){
         Select select  = new Select().from(Plan.class);
         select.where(new Expression(select.getPool(), Conjunction.AND).
-                add(new Expression(select.getPool(),"ACTIVE", Operator.EQ,true)).
-                add(new Expression(select.getPool(),"TRIAL",Operator.EQ,true)));
+                add(new Expression(select.getPool(),"AVAILABLE", Operator.EQ,true)).
+                add(new Expression(select.getPool(),"TRIAL_PLAN",Operator.EQ,true)));
         List<Plan> plans = select.execute();
         if (plans.size() != 1){
             if (plans.size() > 1){

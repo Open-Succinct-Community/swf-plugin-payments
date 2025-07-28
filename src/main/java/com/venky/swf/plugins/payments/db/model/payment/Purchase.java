@@ -57,7 +57,7 @@ public interface Purchase extends Model, CompanyNonSpecific {
     public Timestamp getPurchasedOn();
     public void setPurchasedOn(Timestamp purchasedOn);
 
-    @UNIQUE_KEY
+    @UNIQUE_KEY(allowMultipleRecordsWithNull = false)
     public String getPaymentReference();
     public void setPaymentReference(String paymentReference);
 
