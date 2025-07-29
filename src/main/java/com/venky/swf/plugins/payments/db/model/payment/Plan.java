@@ -57,11 +57,13 @@ public interface Plan extends Model {
     public double getTaxPercentage();
     public void setTaxPercentage(double taxPercentage);
 
-
-
     @COLUMN_DEF(value = StandardDefault.SOME_VALUE,args = "0.0")
     public double getDiscountPercentage();
     public void setDiscountPercentage( double discountPercentage);
+    
+    @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
+    boolean isWalletTopUp();
+    void setWalletTopUp(boolean walletTopUp);
 
     @IS_VIRTUAL
     public Double getSellingPrice();
