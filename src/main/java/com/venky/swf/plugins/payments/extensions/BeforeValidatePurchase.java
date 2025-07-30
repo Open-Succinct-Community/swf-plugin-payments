@@ -73,6 +73,9 @@ public class BeforeValidatePurchase extends BeforeModelValidateExtension<Purchas
             }
             model.getRemainingCredits().increment(plan.getNumberOfCredits());
             model.setAuditRemarks("Top Up");
+            if (model.getPaymentMadeById() == null){
+                model.setPaymentMadeById(model.getCreatorUserId());
+            }
             
             Purchase currentSubscription = model.getBuyer().getLatestSubscription(model.isProduction());
             if (currentSubscription != null) {
