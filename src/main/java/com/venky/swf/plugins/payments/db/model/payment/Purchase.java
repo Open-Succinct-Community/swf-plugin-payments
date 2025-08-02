@@ -23,12 +23,14 @@ public interface Purchase extends Model, CompanyNonSpecific {
     
     @PARTICIPANT
     @IS_NULLABLE
+    @UNIQUE_KEY(allowMultipleRecordsWithNull = false)
     public Long getApplicationId();
     public void setApplicationId(Long id);
     public Application getApplication();
     
     @PARTICIPANT
     @IS_NULLABLE
+    //Already part of UNIQUE_KEY allow multiple false via CompanyNonSpecific
     Long getCompanyId();
     void setCompanyId(Long id);
     Company getCompany();
@@ -93,6 +95,7 @@ public interface Purchase extends Model, CompanyNonSpecific {
     
     @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
     @IS_NULLABLE(false)
+    @UNIQUE_KEY
     boolean isProduction();
     void setProduction(boolean production);
     
