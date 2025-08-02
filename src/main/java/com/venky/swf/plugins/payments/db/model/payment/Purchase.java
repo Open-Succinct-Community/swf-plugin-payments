@@ -96,8 +96,8 @@ public interface Purchase extends Model, CompanyNonSpecific {
     @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
     @IS_NULLABLE(false)
     @UNIQUE_KEY
-    boolean isProduction();
-    void setProduction(boolean production);
+    Boolean isProduction();
+    void setProduction(Boolean production);
     
     
     String getAuditRemarks();
