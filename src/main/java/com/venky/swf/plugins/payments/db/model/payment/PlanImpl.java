@@ -50,7 +50,7 @@ public class PlanImpl extends ModelImpl<Plan> {
         return null;
     }
     
-    public <B extends Buyer & Model> Purchase purchase(B forBuyer){
+    public <B extends Buyer & Model> Purchase purchase(B forBuyer, boolean production){
         User user = getUser();
         if (user == null){
             throw  new RuntimeException("Please login to purchase");
@@ -65,7 +65,7 @@ public class PlanImpl extends ModelImpl<Plan> {
         }
         
         purchase.setCaptured(false);
-        purchase.setProduction(forBuyer.isProduction());
+        purchase.setProduction(production);
         purchase.setRemainingCredits(new Bucket());
         purchase.save();
         return purchase;

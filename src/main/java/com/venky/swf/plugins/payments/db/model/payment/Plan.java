@@ -77,7 +77,7 @@ public interface Plan extends Model {
     
     List<Purchase> getPurchases();
     
-    public Purchase purchase(Buyer forBuyer);
+    public Purchase purchase(Buyer forBuyer,boolean production);
     
     public static Plan trialPlan(){
         Select select  = new Select().from(Plan.class);

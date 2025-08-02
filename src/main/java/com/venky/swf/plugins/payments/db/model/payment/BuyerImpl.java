@@ -2,6 +2,7 @@ package com.venky.swf.plugins.payments.db.model.payment;
 
 import com.venky.cache.UnboundedCache;
 import com.venky.core.date.DateUtils;
+import com.venky.core.util.ObjectUtil;
 import com.venky.swf.db.model.Model;
 import com.venky.swf.db.model.reflection.ModelReflector;
 import com.venky.swf.db.table.ModelImpl;
@@ -10,6 +11,7 @@ import com.venky.swf.sql.Conjunction;
 import com.venky.swf.sql.Expression;
 import com.venky.swf.sql.Operator;
 import com.venky.swf.sql.Select;
+import in.succinct.plugins.kyc.db.model.Verifiable;
 
 import java.lang.module.ModuleReader;
 import java.lang.reflect.Method;
@@ -41,13 +43,24 @@ public abstract class BuyerImpl<B extends Buyer & Model> extends ModelImpl<B> {
         synchronized (this) {
             B buyer = getProxy();
 
-            long today = DateUtils.getStartOfDay(System.currentTimeMillis());
             Purchase purchase = getLatestSubscription(production);
+            if (purchase == null) {
+                Plan trial = Plan.trialPlan();
+                
+                if (!(buyer instanceof Verifiable) ||
+                        ObjectUtil.equals(((Verifiable)buyer).getVerificationStatus(), Verifiable.APPROVED)) {
+                    if (trial != null) {
+                        purchase = trial.purchase(buyer,production);
+                    }
+                }
+            }
+            
             balance = new HashMap<>() {{
                 put("CREDITS", 0);
                 put("DAYS", 0);
             }};
             if (purchase != null){
+                long today = DateUtils.getStartOfDay(System.currentTimeMillis());
                 balance.put("CREDITS",purchase.getRemainingCredits().intValue());
                 balance.put("DAYS", DateUtils.compareToDays(purchase.getExpiresOn().getTime(), today));
             }
