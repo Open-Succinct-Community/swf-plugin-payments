@@ -19,7 +19,9 @@ public interface Buyer {
     @IS_VIRTUAL
     public int getNumDaysLeftInProductionSubscription();
 
-
+    @IS_VIRTUAL
+    boolean isProduction();
+    
     public List<Purchase> getPurchases();
 
 

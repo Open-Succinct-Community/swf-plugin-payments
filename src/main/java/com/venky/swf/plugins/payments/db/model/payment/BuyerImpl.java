@@ -5,6 +5,7 @@ import com.venky.core.date.DateUtils;
 import com.venky.swf.db.model.Model;
 import com.venky.swf.db.model.reflection.ModelReflector;
 import com.venky.swf.db.table.ModelImpl;
+import com.venky.swf.routing.Config;
 import com.venky.swf.sql.Conjunction;
 import com.venky.swf.sql.Expression;
 import com.venky.swf.sql.Operator;
@@ -17,11 +18,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BuyerImpl<B extends Buyer & Model> extends ModelImpl<B> {
+public abstract class BuyerImpl<B extends Buyer & Model> extends ModelImpl<B> {
     public BuyerImpl(B proxy){
         super(proxy);
     }
-
+    
+    public boolean isProduction(){
+        return !Config.instance().isDevelopmentEnvironment();
+    }
+    
     Map<Boolean,Map<String,Integer>> balanceByEnv = new UnboundedCache<>() {
         @Override
         protected Map<String, Integer> getValue(Boolean key) {

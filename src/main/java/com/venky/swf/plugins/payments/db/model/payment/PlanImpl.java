@@ -65,6 +65,7 @@ public class PlanImpl extends ModelImpl<Plan> {
         }
         
         purchase.setCaptured(false);
+        purchase.setProduction(forBuyer.isProduction());
         purchase.setRemainingCredits(new Bucket());
         purchase.save();
         return purchase;
