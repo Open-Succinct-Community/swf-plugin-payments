@@ -9,7 +9,7 @@ import java.util.StringTokenizer;
 
 public class PaymentGatewayExtension extends ModelOperationExtension<PaymentGateway> {
     static {
-        registerExtension(new PaymentLinkExtension());
+        registerExtension(new PaymentGatewayExtension());
     }
     
     @Override

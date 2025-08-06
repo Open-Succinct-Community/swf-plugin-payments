@@ -26,7 +26,7 @@ public class PaymentStatusEventDispatcher implements Task {
     @Override
     public void execute() {
         Config.instance().setHostName(this.hostName);
-        PaymentLink link = Database.getTable(PaymentLink.class).get(linkId);
+        PaymentLink link = Database.getTable(PaymentLink.class).lock(linkId);
         if (!link.isStatusCommunicated()) {
             Event.find("payment_status_update").raise(link.getApplication(), new PaymentStatusEvent() {{
                 setTxnReference( link.getTxnReference());
