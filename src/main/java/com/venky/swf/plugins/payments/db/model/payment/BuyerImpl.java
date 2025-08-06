@@ -36,21 +36,24 @@ public abstract class BuyerImpl<B extends Buyer & Model> extends ModelImpl<B> {
         }
     };
     public Map<String,Integer> getBalance(boolean production){
+        
         Map<String,Integer>balance = balanceByEnv.get(production);
         if (balance != null){
             return balance;
         }
         synchronized (this) {
             B buyer = getProxy();
-
-            Purchase purchase = getLatestSubscription(production);
-            if (purchase == null) {
-                Plan trial = Plan.trialPlan();
-                
-                if (!(buyer instanceof Verifiable) ||
-                        ObjectUtil.equals(((Verifiable)buyer).getVerificationStatus(), Verifiable.APPROVED)) {
-                    if (trial != null) {
-                        purchase = trial.purchase(buyer,production);
+            Purchase purchase = null;
+            if (!buyer.getRawRecord().isNewRecord()){
+                purchase = getLatestSubscription(production);
+                if (purchase == null) {
+                    Plan trial = Plan.trialPlan();
+                    
+                    if (!(buyer instanceof Verifiable) ||
+                            ObjectUtil.equals(((Verifiable)buyer).getVerificationStatus(), Verifiable.APPROVED)) {
+                        if (trial != null) {
+                            purchase = trial.purchase(buyer,production);
+                        }
                     }
                 }
             }
@@ -64,6 +67,7 @@ public abstract class BuyerImpl<B extends Buyer & Model> extends ModelImpl<B> {
                 balance.put("CREDITS",purchase.getRemainingCredits().intValue());
                 balance.put("DAYS", DateUtils.compareToDays(purchase.getExpiresOn().getTime(), today));
             }
+            balanceByEnv.put(production,balance);
         }
         return balance;
     }
