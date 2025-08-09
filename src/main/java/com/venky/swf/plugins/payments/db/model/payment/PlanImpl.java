@@ -20,13 +20,12 @@ public class PlanImpl extends ModelImpl<Plan> {
         int mrp = plan.getMaximumRetailPrice();
         double discountPercentage = plan.getDiscountPercentage();
         double listPrice = mrp * (1 - discountPercentage/100.0);
-        double sellingPrice = listPrice;
         double taxFraction = plan.getTaxPercentage() / 100.0D;
-        if (getProxy().isTaxIncludedInListPrice()){
-            sellingPrice=  new DoubleHolder(listPrice,2).getHeldDouble().doubleValue();
-        }else {
+        double sellingPrice = new DoubleHolder(listPrice,2).getHeldDouble().doubleValue();
+        if (!getProxy().isTaxIncludedInListPrice()){
             sellingPrice = new DoubleHolder(listPrice * (1 +taxFraction )).getHeldDouble().doubleValue();
         }
+        return sellingPrice;
     }
     public void setSellingPrice(Double sellingPrice) {
 
