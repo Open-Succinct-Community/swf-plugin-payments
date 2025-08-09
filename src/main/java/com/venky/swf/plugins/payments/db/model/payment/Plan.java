@@ -62,6 +62,7 @@ public interface Plan extends Model {
     public void setDiscountPercentage( double discountPercentage);
     
     
+    @COLUMN_DEF(StandardDefault.BOOLEAN_TRUE)
     boolean isTaxIncludedInListPrice();
     void setTaxIncludedInListPrice(boolean taxIncludedInSellingPrice);
     
