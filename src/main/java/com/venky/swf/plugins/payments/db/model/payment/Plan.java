@@ -61,6 +61,10 @@ public interface Plan extends Model {
     public double getDiscountPercentage();
     public void setDiscountPercentage( double discountPercentage);
     
+    
+    boolean isTaxIncludedInListPrice();
+    void setTaxIncludedInListPrice(boolean taxIncludedInSellingPrice);
+    
     @COLUMN_DEF(StandardDefault.BOOLEAN_FALSE)
     boolean isWalletTopUp();
     void setWalletTopUp(boolean walletTopUp);

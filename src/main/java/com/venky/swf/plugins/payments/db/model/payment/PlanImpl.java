@@ -5,7 +5,6 @@ import com.venky.core.util.Bucket;
 import com.venky.swf.db.Database;
 import com.venky.swf.db.model.Model;
 import com.venky.swf.db.table.ModelImpl;
-import com.venky.swf.plugins.collab.db.model.participants.admin.Company;
 import com.venky.swf.plugins.collab.db.model.user.User;
 
 
@@ -17,10 +16,17 @@ public class PlanImpl extends ModelImpl<Plan> {
 
 
     public Double getSellingPrice() {
-        int mrp = getProxy().getMaximumRetailPrice();
-        double discountPercentage = getProxy().getDiscountPercentage();
-        double sellingPrice = mrp * (1 - discountPercentage/100.0);
-        return new DoubleHolder(sellingPrice,2).getHeldDouble().doubleValue();
+        Plan  plan = getProxy();
+        int mrp = plan.getMaximumRetailPrice();
+        double discountPercentage = plan.getDiscountPercentage();
+        double listPrice = mrp * (1 - discountPercentage/100.0);
+        double sellingPrice = listPrice;
+        double taxFraction = plan.getTaxPercentage() / 100.0D;
+        if (getProxy().isTaxIncludedInListPrice()){
+            sellingPrice=  new DoubleHolder(listPrice,2).getHeldDouble().doubleValue();
+        }else {
+            sellingPrice = new DoubleHolder(listPrice * (1 +taxFraction )).getHeldDouble().doubleValue();
+        }
     }
     public void setSellingPrice(Double sellingPrice) {
 
