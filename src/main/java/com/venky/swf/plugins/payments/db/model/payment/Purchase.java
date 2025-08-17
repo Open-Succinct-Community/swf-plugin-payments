@@ -2,6 +2,7 @@ package com.venky.swf.plugins.payments.db.model.payment;
 
 import com.venky.core.util.Bucket;
 import com.venky.swf.db.annotations.column.COLUMN_DEF;
+import com.venky.swf.db.annotations.column.COLUMN_SIZE;
 import com.venky.swf.db.annotations.column.IS_NULLABLE;
 import com.venky.swf.db.annotations.column.IS_VIRTUAL;
 import com.venky.swf.db.annotations.column.UNIQUE_KEY;
@@ -99,7 +100,7 @@ public interface Purchase extends Model, CompanyNonSpecific {
     Boolean isProduction();
     void setProduction(Boolean production);
     
-    
+    @COLUMN_SIZE(2048)
     String getAuditRemarks();
     void setAuditRemarks(String lastUpdateRemarks);
     
